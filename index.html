@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSC锁代币质押页面</title>
+    <title>锁代币质押页面</title>
     <style>
         * {
             box-sizing: border-box;
@@ -79,13 +79,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>BSC锁代币质押页面</h1>
+        <h1>锁代币质押页面</h1>
         
         <div class="section">
-            <h2>钱包连接（需切换BSC网络）</h2>
-            <button id="connectBtn">连接钱包</button>
+            <h2>钱包连接</h2>
+            <button id="connectBtn">连接 MetaMask</button>
             <div id="walletAddress" class="info" style="display: none;"></div>
-            <div id="networkTip" class="info" style="display: none;">✅ 当前网络：BSC（Binance Smart Chain）</div>
         </div>
         
         <div class="section">
@@ -116,15 +115,14 @@
         </div>
     </div>
 
-    <!-- BSC适配版 ethers.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
+    <!-- 替换为稳定的 ethers.js CDN 链接 -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <script>
-        // BSC链核心配置
-        const BSC_CHAIN_ID = "0x38"; // BSC主网链ID
+        // 合约地址
         const TOKEN_CONTRACT_ADDRESS = "0x574f567a3f76b555d0a60bacb1110bf79d2c7777";
         const STAKE_CONTRACT_ADDRESS = "0xCb5c82879A56006d6eEF2d03391E48ff774919A2";
         
-        // 合约ABI（BSC链适配，确保函数签名匹配）
+        // 合约ABI（简化版，仅包含需要的函数）
         const TOKEN_ABI = [
             "function balanceOf(address owner) view returns (uint256)",
             "function approve(address spender, uint256 amount) returns (bool)",
@@ -132,9 +130,9 @@
         ];
         
         const STAKE_ABI = [
-            "function stake(uint256 amount) external returns (bool)",
-            "function unstake(uint256 amount) external returns (bool)",
-            "function userStakes(address user) external view returns (uint256)"
+            "function stake(uint256 amount) returns (bool)",
+            "function unstake(uint256 amount) returns (bool)",
+            "function userStakes(address user) view returns (uint256)"
         ];
         
         // 全局变量
@@ -144,7 +142,6 @@
         // DOM元素
         const connectBtn = document.getElementById("connectBtn");
         const walletAddress = document.getElementById("walletAddress");
-        const networkTip = document.getElementById("networkTip");
         const tokenBalance = document.getElementById("tokenBalance");
         const balanceValue = document.getElementById("balanceValue");
         const stakedAmount = document.getElementById("stakedAmount");
@@ -159,85 +156,59 @@
         const unstakeBtn = document.getElementById("unstakeBtn");
         const unstakeStatus = document.getElementById("unstakeStatus");
         
-        // 检查并切换BSC网络
-        async function checkAndSwitchNetwork() {
-            try {
-                const currentChainId = await provider.getNetwork().then(net => net.chainId.toString(16));
-                if (currentChainId !== BSC_CHAIN_ID) {
-                    // 切换到BSC主网
-                    await window.ethereum.request({
-                        method: "wallet_switchEthereumChain",
-                        params: [{ chainId: BSC_CHAIN_ID }]
-                    });
-                }
-                networkTip.style.display = "block";
-                return true;
-            } catch (error) {
-                // 未添加BSC网络，提示用户手动添加
-                if (error.code === 4902) {
-                    showStatus(approveStatus, "请先在钱包中添加BSC主网", "error");
-                } else {
-                    showStatus(approveStatus, "请切换到BSC主网", "error");
-                }
-                return false;
-            }
-        }
-        
         // 连接钱包
         connectBtn.addEventListener("click", async () => {
-            if (!window.ethereum) {
-                showStatus(approveStatus, "请安装MetaMask/Trust Wallet等钱包", "error");
-                return;
-            }
-            
-            try {
-                // 初始化Provider（适配BSC）
-                provider = new ethers.BrowserProvider(window.ethereum);
-                // 请求连接钱包
-                await window.ethereum.request({ method: "eth_requestAccounts" });
-                signer = await provider.getSigner();
-                address = await signer.getAddress();
-                
-                // 检查网络
-                const isBSCNetwork = await checkAndSwitchNetwork();
-                if (!isBSCNetwork) return;
-                
-                // 显示钱包地址
-                walletAddress.textContent = `已连接: ${address.slice(0, 6)}...${address.slice(-4)}`;
-                walletAddress.style.display = "block";
-                
-                // 初始化合约（BSC链适配）
-                tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_ABI, signer);
-                stakeContract = new ethers.Contract(STAKE_CONTRACT_ADDRESS, STAKE_ABI, signer);
-                
-                // 更新账户信息
-                await updateAccountInfo();
-                
-                // 启用功能按钮
-                approveBtn.disabled = false;
-                stakeBtn.disabled = false;
-                unstakeBtn.disabled = false;
-                connectBtn.disabled = true;
-                connectBtn.textContent = "已连接";
-            } catch (error) {
-                showStatus(approveStatus, "连接失败: " + error.message, "error");
+            if (window.ethereum) {
+                try {
+                    // 请求用户授权
+                    await window.ethereum.request({ method: "eth_requestAccounts" });
+                    
+                    // 创建provider和signer
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    signer = provider.getSigner();
+                    address = await signer.getAddress();
+                    
+                    // 显示钱包地址
+                    walletAddress.textContent = `已连接: ${address}`;
+                    walletAddress.style.display = "block";
+                    
+                    // 初始化合约
+                    tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_ABI, signer);
+                    stakeContract = new ethers.Contract(STAKE_CONTRACT_ADDRESS, STAKE_ABI, signer);
+                    
+                    // 更新账户信息
+                    updateAccountInfo();
+                    
+                    // 启用按钮
+                    approveBtn.disabled = false;
+                    stakeBtn.disabled = false;
+                    unstakeBtn.disabled = false;
+                    
+                    // 禁用连接按钮
+                    connectBtn.disabled = true;
+                    connectBtn.textContent = "已连接";
+                } catch (error) {
+                    showStatus(approveStatus, "连接钱包失败: " + error.message, "error");
+                }
+            } else {
+                showStatus(approveStatus, "请安装 MetaMask 钱包", "error");
             }
         });
         
         // 更新账户信息
         async function updateAccountInfo() {
             try {
-                // 获取锁代币余额（BSC链wei转换）
+                // 获取代币余额
                 const balance = await tokenContract.balanceOf(address);
-                balanceValue.textContent = ethers.formatEther(balance);
+                balanceValue.textContent = ethers.utils.formatEther(balance);
                 tokenBalance.style.display = "block";
                 
                 // 获取已质押数量
                 const staked = await stakeContract.userStakes(address);
-                stakedValue.textContent = ethers.formatEther(staked);
+                stakedValue.textContent = ethers.utils.formatEther(staked);
                 stakedAmount.style.display = "block";
             } catch (error) {
-                showStatus(approveStatus, "获取信息失败: " + error.message, "error");
+                showStatus(approveStatus, "获取账户信息失败: " + error.message, "error");
             }
         }
         
@@ -245,20 +216,102 @@
         approveBtn.addEventListener("click", async () => {
             const amount = approveAmount.value;
             if (!amount || amount <= 0) {
-                showStatus(approveStatus, "请输入有效数量", "error");
+                showStatus(approveStatus, "请输入有效的授权数量", "error");
                 return;
             }
             
             try {
-                showStatus(approveStatus, "授权中...", "info");
-                const amountWei = ethers.parseEther(amount);
+                showStatus(approveStatus, "正在授权...", "info");
+                
+                // 转换为wei
+                const amountWei = ethers.utils.parseEther(amount);
+                
+                // 调用approve函数
                 const tx = await tokenContract.approve(STAKE_CONTRACT_ADDRESS, amountWei);
+                
+                // 等待交易确认
                 await tx.wait();
-                showStatus(approveStatus, "授权成功！", "success");
-                await updateAccountInfo();
+                
+                showStatus(approveStatus, "授权成功!", "success");
+                
+                // 更新账户信息
+                updateAccountInfo();
             } catch (error) {
                 showStatus(approveStatus, "授权失败: " + error.message, "error");
             }
         });
         
         // 质押操作
+        stakeBtn.addEventListener("click", async () => {
+            const amount = stakeAmount.value;
+            if (!amount || amount <= 0) {
+                showStatus(stakeStatus, "请输入有效的质押数量", "error");
+                return;
+            }
+            
+            try {
+                showStatus(stakeStatus, "正在质押...", "info");
+                
+                // 转换为wei
+                const amountWei = ethers.utils.parseEther(amount);
+                
+                // 调用stake函数
+                const tx = await stakeContract.stake(amountWei);
+                
+                // 等待交易确认
+                await tx.wait();
+                
+                showStatus(stakeStatus, "质押成功!", "success");
+                
+                // 更新账户信息
+                updateAccountInfo();
+            } catch (error) {
+                showStatus(stakeStatus, "质押失败: " + error.message, "error");
+            }
+        });
+        
+        // 取消质押操作
+        unstakeBtn.addEventListener("click", async () => {
+            const amount = unstakeAmount.value;
+            if (!amount || amount <= 0) {
+                showStatus(unstakeStatus, "请输入有效的取消质押数量", "error");
+                return;
+            }
+            
+            try {
+                showStatus(unstakeStatus, "正在取消质押...", "info");
+                
+                // 转换为wei
+                const amountWei = ethers.utils.parseEther(amount);
+                
+                // 调用unstake函数
+                const tx = await stakeContract.unstake(amountWei);
+                
+                // 等待交易确认
+                await tx.wait();
+                
+                showStatus(unstakeStatus, "取消质押成功!", "success");
+                
+                // 更新账户信息
+                updateAccountInfo();
+            } catch (error) {
+                showStatus(unstakeStatus, "取消质押失败: " + error.message, "error");
+            }
+        });
+        
+        // 显示状态信息
+        function showStatus(element, message, type) {
+            element.textContent = message;
+            element.className = "status " + type;
+            element.style.display = "block";
+            
+            // 3秒后自动隐藏成功和信息状态
+            if (type === "success" || type === "info") {
+                setTimeout(() => {
+                    element.style.display = "none";
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
