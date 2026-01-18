@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>锁代币质押页面（优化版）</title>
+    <title>锁代币质押页面（修复版）</title>
     <style>
         * {
             box-sizing: border-box;
@@ -87,7 +87,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>锁代币质押页面（优化版）</h1>
+        <h1>锁代币质押页面（修复版）</h1>
         
         <div id="networkWarning" class="network-warning">
             ⚠️ 警告：当前网络不是 BSC 主网（Chain ID: 56），请切换后重试！
@@ -256,11 +256,6 @@
                 balanceValue.textContent = ethers.utils.formatEther(balance);
                 tokenBalance.style.display = "block";
                 
-                // 获取已质押数量
-                const staked = await stakeContract.userStakes(address, 0); // 注意：这里只获取了第一个质押记录的数量，实际应用中可能需要遍历所有记录
-                stakedValue.textContent = ethers.utils.formatEther(staked.amount);
-                stakedAmount.style.display = "block";
-                
                 // 获取授权额度
                 const allowance = await tokenContract.allowance(address, STAKE_CONTRACT_ADDRESS);
                 allowanceValue.textContent = ethers.utils.formatEther(allowance);
@@ -270,6 +265,18 @@
                 const rewards = await stakeContract.getPendingRewards(address);
                 pendingRewardsValue.textContent = ethers.utils.formatEther(rewards);
                 pendingRewards.style.display = "block";
+                
+                // 计算已质押总数
+                const stakeCount = await stakeContract.getUserStakeCount(address);
+                let totalStaked = ethers.BigNumber.from(0);
+                
+                for (let i = 0; i < stakeCount.toNumber(); i++) {
+                    const stake = await stakeContract.getUserStake(address, i);
+                    totalStaked = totalStaked.add(stake.amount);
+                }
+                
+                stakedValue.textContent = ethers.utils.formatEther(totalStaked);
+                stakedAmount.style.display = "block";
             } catch (error) {
                 showStatus(approveStatus, "获取账户信息失败: " + error.message, "error");
             }
