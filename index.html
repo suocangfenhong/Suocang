@@ -184,6 +184,15 @@
         .hidden {
             display: none;
         }
+
+        .network-alert {
+            background-color: #ff9800;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -194,6 +203,10 @@
         </header>
 
         <div id="app-content" class="hidden">
+            <div id="network-alert" class="network-alert hidden">
+                警告：当前网络不是 BSC 主网，请切换到 BSC 主网（Chain ID: 56）后重试！
+            </div>
+
             <div class="section">
                 <div class="info-line">可领取分红: <span id="pending-rewards">-</span> BNB</div>
             </div>
@@ -238,407 +251,18 @@
         <div id="welcome-content">
             <div class="section" style="text-align: center; padding: 40px 20px;">
                 <div class="section-title" style="font-size: 24px; margin-bottom: 20px;">欢迎使用质押 & 分红 DApp</div>
-                <p style="margin-bottom: 30px; color: #b0b0b0;">请连接您的 MetaMask 钱包以开始使用</p>
+                <p style="margin-bottom: 30px; color: #b0b0b0;">请连接您的 MetaMask 钱包（需切换到 BSC 主网）以开始使用</p>
                 <button id="welcome-connect-btn" class="btn btn-primary">连接 MetaMask</button>
             </div>
         </div>
     </div>
 
     <script>
-        // ==================== 原生 JS 实现核心工具函数（无任何外部依赖）====================
-        const CONTRACT_ADDRESS = '0xCb5c82879A56006d6eEF2d03391E48ff774919A2';
-        const ABI = [{"inputs":[{"internalType":"address","name":"_memeToken","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"EnforcedPause","type":"error"},{"inputs":[],"name":"ExpectedPause","type":"error"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"OwnableInvalidOwner","type":"error"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"OwnableUnauthorizedAccount","type":"error"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"DividendDistributed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"admin","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"EmergencyWithdrawBNB","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"admin","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"EmergencyWithdrawMEME","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newBlocks","type":"uint256"}],"name":"LockBlocksUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"oldToken","type":"address"},{"indexed":false,"internalType":"address","name":"newToken","type":"address"}],"name":"MemeTokenUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newAmount","type":"uint256"}],"name":"MinLockAmountUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Paused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardClaimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Staked","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Unpaused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"penalty","type":"uint256"}],"name":"Unstaked","type":"event"},{"inputs":[],"name":"BURN_ADDRESS","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"DISTRIBUTION_THRESHOLD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"PENALTY_RATE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"claimRewards","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"disableStaking","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"dividendPerToken","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"emergencyWithdrawBNB","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"emergencyWithdrawMEME","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"enableStaking","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getPendingRewards","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"uint256","name":"index","type":"uint256"}],"name":"getUserStake","outputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"startBlock","type":"uint256"},{"internalType":"uint256","name":"unlockBlock","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getUserStakeCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lockBlocks","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"memeToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"minLockAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"paused","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"pendingBNB","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_blocks","type":"uint256"}],"name":"setLockBlocks","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_newMemeToken","type":"address"}],"name":"setMemeToken","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"setMinLockAmount","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"stake","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"totalStaked","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"unstake","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"userRewards","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"userStakes","outputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"startBlock","type":"uint256"},{"internalType":"uint256","name":"dividendPerTokenAtStake","type":"uint256"}],"stateMutability":"view","type":"function"},{"stateMutability":"payable","type":"receive"}];
+        // ==================== 核心配置（请确认以下信息正确）====================
+        const CONTRACT_ADDRESS = '0xCb5c82879A56006d6eEF2d03391E48ff774919A2'; // 您的合约地址
+        const BSC_MAINNET_CHAIN_ID = '0x38'; // 56 的十六进制表示
+        const BSC_TESTNET_CHAIN_ID = '0x61'; // 97 的十六进制表示
+        const SUPPORTED_CHAIN_IDS = [BSC_MAINNET_CHAIN_ID, BSC_TESTNET_CHAIN_ID]; // 支持的网络
+        const DEFAULT_MEME_TOKEN_ADDRESS = ''; // 可选：手动填写您的 MEME 代币地址（备用）
 
-        // 工具函数：解析 Ether（字符串转 wei）
-        function parseEther(etherStr) {
-            const ether = parseFloat(etherStr);
-            if (isNaN(ether)) return '0';
-            return (ether * 1e18).toString();
-        }
-
-        // 工具函数：格式化 Ether（wei 转字符串）
-        function formatEther(weiStr) {
-            const wei = BigInt(weiStr || '0');
-            return (wei / BigInt(1e18)).toString();
-        }
-
-        // 工具函数：生成函数签名哈希（前4字节）
-        function getFunctionSignatureHash(functionName, params) {
-            const funcStr = `${functionName}(${params.join(',')})`;
-            const encoder = new TextEncoder();
-            const data = encoder.encode(funcStr);
-            return crypto.subtle.digest('SHA-256', data).then(hash => {
-                const hashArray = Array.from(new Uint8Array(hash));
-                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-                return hashHex.substring(0, 8);
-            });
-        }
-
-        // 工具函数：编码地址参数
-        function encodeAddress(address) {
-            return address.replace('0x', '').padStart(64, '0');
-        }
-
-        // 工具函数：编码 uint256 参数
-        function encodeUint256(value) {
-            return BigInt(value).toString(16).padStart(64, '0');
-        }
-
-        // 工具函数：编码参数
-        async function encodeParams(functionAbi, params) {
-            let data = '';
-            for (let i = 0; i < functionAbi.inputs.length; i++) {
-                const input = functionAbi.inputs[i];
-                const param = params[i];
-                switch (input.type) {
-                    case 'address':
-                        data += encodeAddress(param);
-                        break;
-                    case 'uint256':
-                        data += encodeUint256(param);
-                        break;
-                    default:
-                        throw new Error(`不支持的参数类型: ${input.type}`);
-                }
-            }
-            return data;
-        }
-
-        // 工具函数：编码函数调用数据
-        async function encodeFunctionCall(functionName, params) {
-            const funcAbi = ABI.find(f => f.name === functionName && f.type === 'function');
-            if (!funcAbi) throw new Error(`函数 ${functionName} 不存在`);
-            
-            const paramTypes = funcAbi.inputs.map(input => input.type);
-            const sigHash = await getFunctionSignatureHash(functionName, paramTypes);
-            const paramData = await encodeParams(funcAbi, params);
-            return `0x${sigHash}${paramData}`;
-        }
-
-        // ==================== 核心逻辑 ====================
-        let currentAccount = null;
-        let memeTokenAddress = null;
-
-        // DOM 元素
-        const connectBtn = document.getElementById('connect-btn');
-        const welcomeConnectBtn = document.getElementById('welcome-connect-btn');
-        const appContent = document.getElementById('app-content');
-        const welcomeContent = document.getElementById('welcome-content');
-        const pendingRewardsEl = document.getElementById('pending-rewards');
-        const refreshStakesBtn = document.getElementById('refresh-stakes');
-        const stakesListEl = document.getElementById('stakes-list');
-        const claimRewardsBtn = document.getElementById('claim-rewards');
-        const stakeAmountInput = document.getElementById('stake-amount');
-        const approveTokenBtn = document.getElementById('approve-token');
-        const stakeTokenBtn = document.getElementById('stake-token');
-        const unstakeIndexInput = document.getElementById('unstake-index');
-        const unstakeTokenBtn = document.getElementById('unstake-token');
-        const statusEl = document.getElementById('status');
-
-        // 页面加载完成初始化
-        window.addEventListener('load', () => {
-            console.log('页面加载完成，初始化事件绑定...');
-            
-            // 绑定所有按钮事件
-            connectBtn.addEventListener('click', connectWallet);
-            welcomeConnectBtn.addEventListener('click', connectWallet);
-            refreshStakesBtn.addEventListener('click', refreshStakes);
-            claimRewardsBtn.addEventListener('click', claimRewards);
-            approveTokenBtn.addEventListener('click', approveToken);
-            stakeTokenBtn.addEventListener('click', stakeToken);
-            unstakeTokenBtn.addEventListener('click', unstakeToken);
-
-            console.log('事件绑定完成，检测 MetaMask...');
-            console.log('window.ethereum 存在吗？', !!window.ethereum);
-        });
-
-        // 连接钱包
-        async function connectWallet() {
-            try {
-                console.log('开始连接钱包...');
-                
-                // 禁用按钮
-                connectBtn.disabled = true;
-                connectBtn.textContent = '连接中...';
-                welcomeConnectBtn.disabled = true;
-                welcomeConnectBtn.textContent = '连接中...';
-                
-                // 检测 MetaMask
-                if (!window.ethereum) {
-                    throw new Error('未检测到 MetaMask，请安装后重试');
-                }
-
-                showStatus('正在连接 MetaMask...', 'info');
-                
-                // 请求授权
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                if (!accounts || accounts.length === 0) {
-                    throw new Error('用户拒绝了授权');
-                }
-
-                currentAccount = accounts[0];
-                console.log('钱包连接成功，账户:', currentAccount);
-                
-                // 获取 MEME 代币地址
-                await fetchMemeTokenAddress();
-                
-                // 更新 UI
-                updateUIAfterConnect();
-                showStatus('钱包连接成功！', 'success');
-                
-            } catch (error) {
-                console.error('连接失败:', error);
-                showStatus(`连接失败: ${error.message}`, 'error');
-            } finally {
-                // 恢复按钮状态
-                connectBtn.disabled = false;
-                connectBtn.textContent = '连接 MetaMask';
-                welcomeConnectBtn.disabled = false;
-                welcomeConnectBtn.textContent = '连接 MetaMask';
-            }
-        }
-
-        // 获取 MEME 代币地址
-        async function fetchMemeTokenAddress() {
-            try {
-                const funcData = await encodeFunctionCall('memeToken', []);
-                const result = await window.ethereum.request({
-                    method: 'eth_call',
-                    params: [{ to: CONTRACT_ADDRESS, data: funcData }, 'latest']
-                });
-                // 解析地址（截取后40个字符）
-                memeTokenAddress = `0x${result.slice(-40)}`;
-                console.log('MEME 代币地址:', memeTokenAddress);
-            } catch (error) {
-                console.error('获取代币地址失败:', error);
-                throw new Error('无法获取代币地址，请重试');
-            }
-        }
-
-        // 更新连接后的 UI
-        function updateUIAfterConnect() {
-            connectBtn.textContent = `已连接: ${currentAccount.substring(0, 6)}...${currentAccount.substring(38)}`;
-            appContent.classList.remove('hidden');
-            welcomeContent.classList.add('hidden');
-            
-            // 加载初始数据
-            loadPendingRewards();
-            refreshStakes();
-        }
-
-        // 加载可领取分红
-        async function loadPendingRewards() {
-            try {
-                const funcData = await encodeFunctionCall('getPendingRewards', [currentAccount]);
-                const result = await window.ethereum.request({
-                    method: 'eth_call',
-                    params: [{ to: CONTRACT_ADDRESS, data: funcData }, 'latest']
-                });
-                const rewards = formatEther(result);
-                pendingRewardsEl.textContent = rewards;
-            } catch (error) {
-                console.error('获取分红失败:', error);
-                pendingRewardsEl.textContent = '获取失败';
-            }
-        }
-
-        // 刷新质押列表
-        async function refreshStakes() {
-            try {
-                showStatus('正在刷新质押列表...', 'info');
-                
-                // 获取质押数量
-                const countData = await encodeFunctionCall('getUserStakeCount', [currentAccount]);
-                const countResult = await window.ethereum.request({
-                    method: 'eth_call',
-                    params: [{ to: CONTRACT_ADDRESS, data: countData }, 'latest']
-                });
-                const stakeCount = parseInt(countResult, 16);
-                
-                if (stakeCount === 0) {
-                    stakesListEl.innerHTML = '<div style="text-align: center; color: #666;">暂无质押记录</div>';
-                    showStatus('质押列表已刷新', 'success');
-                    return;
-                }
-
-                stakesListEl.innerHTML = '';
-                
-                // 遍历所有质押记录
-                for (let i = 0; i < stakeCount; i++) {
-                    const stakeData = await encodeFunctionCall('getUserStake', [currentAccount, i]);
-                    const stakeResult = await window.ethereum.request({
-                        method: 'eth_call',
-                        params: [{ to: CONTRACT_ADDRESS, data: stakeData }, 'latest']
-                    });
-                    
-                    // 解析质押数据（3个 uint256 参数）
-                    const amount = formatEther(`0x${stakeResult.slice(2, 66)}`);
-                    const startBlock = parseInt(`0x${stakeResult.slice(66, 130)}`, 16);
-                    const unlockBlock = parseInt(`0x${stakeResult.slice(130, 194)}`, 16);
-                    
-                    const stakeItem = document.createElement('div');
-                    stakeItem.className = 'stake-item';
-                    stakeItem.innerHTML = `
-                        <div class="stake-info">索引: ${i}</div>
-                        <div class="stake-info">数量: ${amount} MEME</div>
-                        <div class="stake-info">开始区块: ${startBlock}</div>
-                        <div class="stake-info">解锁区块: ${unlockBlock}</div>
-                    `;
-                    stakesListEl.appendChild(stakeItem);
-                }
-                
-                showStatus('质押列表已刷新', 'success');
-            } catch (error) {
-                console.error('刷新质押列表失败:', error);
-                showStatus(`刷新失败: ${error.message}`, 'error');
-            }
-        }
-
-        // 领取分红
-        async function claimRewards() {
-            try {
-                showStatus('正在领取分红...', 'info');
-                
-                const funcData = await encodeFunctionCall('claimRewards', []);
-                const txHash = await window.ethereum.request({
-                    method: 'eth_sendTransaction',
-                    params: [{
-                        to: CONTRACT_ADDRESS,
-                        data: funcData,
-                        from: currentAccount
-                    }]
-                });
-                
-                showStatus(`分红交易已发送: ${txHash}`, 'success');
-                
-                // 等待交易确认（5秒后刷新）
-                setTimeout(() => {
-                    loadPendingRewards();
-                    showStatus('分红领取成功！', 'success');
-                }, 8000);
-            } catch (error) {
-                console.error('领取分红失败:', error);
-                showStatus(`领取失败: ${error.message}`, 'error');
-            }
-        }
-
-        // 授权代币
-        async function approveToken() {
-            try {
-                const amount = stakeAmountInput.value.trim();
-                if (!amount || parseFloat(amount) <= 0) {
-                    throw new Error('请输入有效的质押数量');
-                }
-
-                if (!memeTokenAddress) {
-                    throw new Error('未获取到代币地址，请先刷新页面');
-                }
-
-                showStatus('正在授权代币...', 'info');
-                
-                // ERC20 approve 函数调用
-                const funcData = await encodeFunctionCall('approve', [CONTRACT_ADDRESS, parseEther(amount)]);
-                const txHash = await window.ethereum.request({
-                    method: 'eth_sendTransaction',
-                    params: [{
-                        to: memeTokenAddress,
-                        data: funcData,
-                        from: currentAccount
-                    }]
-                });
-                
-                showStatus(`授权交易已发送: ${txHash}`, 'success');
-                
-                setTimeout(() => {
-                    showStatus('代币授权成功！', 'success');
-                }, 8000);
-            } catch (error) {
-                console.error('授权失败:', error);
-                showStatus(`授权失败: ${error.message}`, 'error');
-            }
-        }
-
-        // 质押代币
-        async function stakeToken() {
-            try {
-                const amount = stakeAmountInput.value.trim();
-                if (!amount || parseFloat(amount) <= 0) {
-                    throw new Error('请输入有效的质押数量');
-                }
-
-                showStatus('正在质押代币...', 'info');
-                
-                const funcData = await encodeFunctionCall('stake', [parseEther(amount)]);
-                const txHash = await window.ethereum.request({
-                    method: 'eth_sendTransaction',
-                    params: [{
-                        to: CONTRACT_ADDRESS,
-                        data: funcData,
-                        from: currentAccount
-                    }]
-                });
-                
-                showStatus(`质押交易已发送: ${txHash}`, 'success');
-                
-                setTimeout(() => {
-                    refreshStakes();
-                    loadPendingRewards();
-                    stakeAmountInput.value = '';
-                    showStatus('质押成功！', 'success');
-                }, 8000);
-            } catch (error) {
-                console.error('质押失败:', error);
-                showStatus(`质押失败: ${error.message}`, 'error');
-            }
-        }
-
-        // 取消质押
-        async function unstakeToken() {
-            try {
-                const index = parseInt(unstakeIndexInput.value.trim());
-                if (isNaN(index) || index < 0) {
-                    throw new Error('请输入有效的质押索引');
-                }
-
-                showStatus('正在取消质押...', 'info');
-                
-                const funcData = await encodeFunctionCall('unstake', [index]);
-                const txHash = await window.ethereum.request({
-                    method: 'eth_sendTransaction',
-                    params: [{
-                        to: CONTRACT_ADDRESS,
-                        data: funcData,
-                        from: currentAccount
-                    }]
-                });
-                
-                showStatus(`取消质押交易已发送: ${txHash}`, 'success');
-                
-                setTimeout(() => {
-                    refreshStakes();
-                    loadPendingRewards();
-                    unstakeIndexInput.value = '';
-                    showStatus('取消质押成功！', 'success');
-                }, 8000);
-            } catch (error) {
-                console.error('取消质押失败:', error);
-                showStatus(`取消质押失败: ${error.message}`, 'error');
-            }
-        }
-
-        // 显示状态提示
-        function showStatus(message, type) {
-            statusEl.textContent = message;
-            statusEl.className = `status ${type}`;
-            statusEl.style.display = 'block';
-
-            // 成功信息3秒后隐藏
-            if (type === 'success') {
-                setTimeout(() => {
-                    statusEl.style.display = 'none';
-                }, 3000);
-            }
-        }
-    </script>
-</body>
-</html>
+        const ABI = [{"inputs":[{"internalType":"address","name":"_memeToken","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"EnforcedPause","type":"error"},{"inputs":[],"name":"ExpectedPause","type":"error"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"OwnableInvalidOwner","type":"error"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"OwnableUnauthorizedAccount","type":"error"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"DividendDistributed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"admin","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"EmergencyWithdrawBNB","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"admin","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"EmergencyWithdrawMEME","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newBlocks","type":"uint256"}],"name":"LockBlocksUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"oldToken","type":"address"},{"indexed":false,"internalType":"address","name":"newToken","type":"address"}],"name":"MemeTokenUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newAmount","type":"uint256"}],"name":"MinLockAmountUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Paused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType
