@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>锁仓质押分红平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #FFD700;
+            --primary-dark: #D4AF37;
+            --bg: #0F172A;
+            --bg-light: #1E293B;
+            --text: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --border: #334155;
+            --success: #10B981;
+            --error: #EF4444;
+            --info: #3B82F6;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        body {
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(255,215,0,0.05) 0%, transparent 20%),
+                radial-gradient(circle at 80% 70%, rgba(255,215,0,0.05) 0%, transparent 20%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        .header::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            margin: 15px auto 0;
+        }
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .header h1 i {
+            font-size: 1.8rem;
+            animation: pulse 2s infinite;
+        }
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background-color: var(--bg-light);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.3);
+            border-color: var(--primary);
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .card-header i {
+            font-size: 1.5rem;
+            color: var(--primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255,215,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: var(--bg);
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(255,215,0,0.2);
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: #0F172A;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        button:disabled {
+            background: var(--border);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,215,0,0.3);
+        }
+        .status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: none;
+        }
+        .success {
+            background-color: rgba(16,185,129,0.1);
+            color: var(--success);
+            border: 1px solid rgba(16,185,129,0.3);
+            display: block;
+        }
+        .error {
+            background-color: rgba(239,68,68,0.1);
+            color: var(--error);
+            border: 1px solid rgba(239,68,68,0.3);
+            display: block;
+        }
+        .info {
+            background-color: rgba(59,130,246,0.1);
+            color: var(--info);
+            border: 1px solid rgba(59,130,246,0.3);
+            display: block;
+        }
+        .wallet-connect {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .wallet-btn {
+            max-width: 300px;
+            margin: 0 auto;
+            background: linear-gradient(to right, #3B82F6, #2563EB);
+            color: white;
+        }
+        .wallet-address {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            background-color: var(--bg-light);
+            padding: 10px 15px;
+            border-radius: 8px;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            display: none;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background-color: var(--bg-light);
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        .stat-card h3 {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        .stat-card p {
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .footer {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            .card-container {
+                gap: 20px;
+            }
+            .card {
+                padding: 20px;
+            }
+            .stats {
+                gap: 12px;
+            }
+            .stat-card p {
+                font-size: 1.3rem;
+            }
+        }
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .card-header h2 {
+                font-size: 1.2rem;
+            }
+            input, button {
+                padding: 12px;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1><<i class="fas fa-lock"></</i> 锁仓质押分红平台</h1>
+            <p>安全质押代币，锁定资产增值，一键领取分红，全程链上透明</p>
+        </div>
+
+        <!-- 钱包连接 -->
+        <div class="wallet-connect">
+            <button id="connectBtn" class="wallet-btn">
+                <<i class="fas fa-wallet"></</i> 连接钱包
+            </button>
+            <div id="walletAddress" class="wallet-address"></div>
+        </div>
+
+        <!-- 账户统计 -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3>可用代币余额</h3>
+                <p id="tokenBalance">--</p>
+            </div>
+            <div class="stat-card">
+                <h3>已质押数量</h3>
+                <p id="stakedBalance">--</p>
+            </div>
+            <div class="stat-card">
+                <h3>待领取分红</h3>
+                <p id="rewardBalance">--</p>
+            </div>
+        </div>
+
+        <!-- 功能卡片 -->
+        <div class="card-container">
+            <!-- 质押代币 -->
+            <div class="card">
+                <div class="card-header">
+                    <<i class="fas fa-hand-holding-usd"></</i>
+                    <h2>质押代币</h2>
+                </div>
+                <div class="form-group">
+                    <label for="stakeAmount">质押数量</label>
+                    <inpu
