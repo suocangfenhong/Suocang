@@ -3,248 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>质押 & 分红 (BSC)</title>
+    <title>极简版 - 连接测试</title>
     <script src="https://cdn.ethers.org/lib-ethers/6.13.0/dist/ethers.umd.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
         body {
-            background-color: #1a1a2e;
-            color: #ffffff;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
+            font-family: Arial, sans-serif;
             max-width: 600px;
             margin: 0 auto;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #333;
-        }
-
-        .logo {
-            font-size: 20px;
-            font-weight: bold;
-            color: #ffffff;
-        }
-
-        .connect-btn {
-            background-color: #0066ff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background-color 0.3s;
-        }
-
-        .connect-btn:disabled {
-            background-color: #666;
-            cursor: not-allowed;
-        }
-
-        .connect-btn:hover:not(:disabled) {
-            background-color: #0052cc;
-        }
-
-        .section {
-            background-color: #16213e;
-            border-radius: 10px;
             padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
             margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #e0e0e0;
-        }
-
-        .info-line {
-            margin-bottom: 10px;
-            color: #b0b0b0;
-        }
-
         .btn {
-            width: 100%;
-            padding: 12px;
+            background: #0066ff;
+            color: white;
             border: none;
+            padding: 12px 24px;
             border-radius: 5px;
             cursor: pointer;
-            font-weight: 500;
             font-size: 16px;
-            margin-top: 10px;
-            transition: background-color 0.3s;
+            margin: 10px 0;
         }
-
-        .btn-primary {
-            background-color: #6441a5;
-            color: white;
+        .btn:hover {
+            background: #0052cc;
         }
-
-        .btn-primary:hover {
-            background-color: #533894;
-        }
-
-        .btn-danger {
-            background-color: #e74c3c;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-
-        .btn-outline {
-            background-color: transparent;
-            color: #b0b0b0;
-            border: 1px solid #333;
-        }
-
-        .btn-outline:hover {
-            background-color: #2d3436;
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #b0b0b0;
-            font-size: 14px;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 12px;
-            background-color: #0f3460;
-            border: 1px solid #333;
-            border-radius: 5px;
-            color: white;
-            font-size: 16px;
-        }
-
-        .input-group input::placeholder {
-            color: #666;
-        }
-
-        .stake-item {
-            background-color: #0f3460;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-
-        .stake-item .stake-info {
-            font-size: 14px;
-            margin-bottom: 5px;
-            color: #b0b0b0;
-        }
-
         .status {
-            margin-top: 15px;
+            margin-top: 20px;
             padding: 10px;
             border-radius: 5px;
-            font-size: 14px;
-            font-weight: 500;
         }
-
-        .status.success {
-            background-color: #27ae60;
-            color: white;
+        .success {
+            background: #d4edda;
+            color: #155724;
         }
-
-        .status.error {
-            background-color: #c0392b;
-            color: white;
+        .error {
+            background: #f8d7da;
+            color: #721c24;
         }
-
-        .status.info {
-            background-color: #3498db;
-            color: white;
-        }
-
-        .hidden {
-            display: none;
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <div class="logo">质押 & 分红 (BSC)</div>
-            <button id="connect-btn" class="connect-btn">连接 MetaMask</button>
-        </header>
-
-        <div id="app-content" class="hidden">
-            <div class="section">
-                <div class="info-line">可领取分红: <span id="pending-rewards">-</span> BNB</div>
-            </div>
-
-            <div class="section">
-                <div class="section-title">我的质押条目</div>
-                <button id="refresh-stakes" class="btn btn-outline">刷新质押列表</button>
-                <div id="stakes-list" style="margin-top: 15px;">
-                    <div style="text-align: center; color: #666;">暂无质押记录</div>
-                </div>
-            </div>
-
-            <div class="section">
-                <div class="section-title">操作</div>
-
-                <div style="margin-bottom: 20px;">
-                    <div class="section-title" style="font-size: 16px; margin-bottom: 10px;">领取分红</div>
-                    <button id="claim-rewards" class="btn btn-primary">领取分红</button>
-                </div>
-
-                <div style="margin-bottom: 20px;">
-                    <div class="section-title" style="font-size: 16px; margin-bottom: 10px;">质押代币</div>
-                    <div class="input-group">
-                        <input type="text" id="stake-amount" placeholder="输入质押数量">
-                    </div>
-                    <button id="approve-token" class="btn btn-outline">先批准（ERC20 授权）</button>
-                    <button id="stake-token" class="btn btn-primary">质押</button>
-                </div>
-
-                <div>
-                    <div class="section-title" style="font-size: 16px; margin-bottom: 10px;">取消质押（按索引）</div>
-                    <div class="input-group">
-                        <input type="number" id="unstake-index" placeholder="输入要解除的质押索引（整数）" min="0">
-                    </div>
-                    <button id="unstake-token" class="btn btn-danger">取消质押（按索引）</button>
-                </div>
-            </div>
-
-            <div id="status" class="status" style="display: none;"></div>
-        </div>
-
-        <div id="welcome-content">
-            <div class="section" style="text-align: center; padding: 40px 20px;">
-                <div class="section-title" style="font-size: 24px; margin-bottom: 20px;">欢迎使用质押 & 分红 DApp</div>
-                <p style="margin-bottom: 30px; color: #b0b0b0;">请连接您的 MetaMask 钱包以开始使用</p>
-                <button id="welcome-connect-btn" class="btn btn-primary">连接 MetaMask</button>
-            </div>
+        <h1>连接测试</h1>
+        <button id="connect-btn" class="btn">连接 MetaMask</button>
+        <div id="status" class="status" style="display: none;"></div>
+        <div id="account-info" style="margin-top: 20px; display: none;">
+            <h3>已连接账户:</h3>
+            <p id="account-address"></p>
         </div>
     </div>
 
     <script>
-        // 合约配置
-        const CONTRACT_ADDRESS = '0xCb5c82879A56006d6eEF2d03391E48ff774919A2';
-        const CONTRACT_ABI = [{"inputs":[{"internalType":"address","name":"_memeToken","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"EnforcedPause","type":"error"},{"inputs":[],"name":"ExpectedPause","type":"error"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"OwnableInvalidOwner","type":"error"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"OwnableUnauthorizedAccount","type":"error"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"DividendDistributed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"admin","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"EmergencyWithdrawBNB","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"admin","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"EmergencyWithdrawMEME","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newBlocks","type":"uint256"}],"name":"LockBlocksUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"oldToken","type":"address"},{"indexed":false,"internalType":"address","name":"newToken","type":"address"}],"name":"MemeTokenUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newAmount","type":"uint256"}],"name":"MinLockAmountUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Paused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardClaimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Staked","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Unpaused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"penalty","type":"uint256"}],"name":"Unstaked","type":"event"},{"inputs":[],"name":"BURN_ADDRESS","outputs":[{"internalType":"address","name":"","type":"address"}],"sta
+        // 确保页面完全加载后再执行
+        window.addEventListener('load', () => {
+            console.log('页面加载完成！');
+            
+            const connectBtn = document.getElementById('connect-btn');
+            const statusEl = document.getElementById('status');
+            const accountInfoEl = document.getElementById('account-info');
+            const accountAddressEl = document.getElementById('account-address');
+            
+            console.log('DOM元素获取成功:', !!connectBtn, !!statusEl, !!accountInfoEl, !!accountAddressEl);
+            
+            // 绑定点击事件
+            connectBtn.addEventListener('click', async () => {
+                console.log('按钮被点击！');
+                
+                try {
+                    // 显示状态
+                    statusEl.textContent = '正在连接 MetaMask...';
+                    statusEl.className = 'status info';
+                    statusEl.style.display = 'block';
+                    
+                    // 检测 MetaMask
+                    if (!window.ethereum) {
+                        throw new Error('未检测到 MetaMask，请先安装');
+                    }
+                    console.log('检测到 MetaMask:', window.ethereum);
+                    
+                    // 请求连接
+                    const provider = new ethers.BrowserProvider(window.ethereum);
+                    const accounts = await provider.send('eth_requestAccounts', []);
+                    const account = accounts[0];
+                    console.log('连接成功，账户:', account);
+                    
+                    // 显示结果
+                    statusEl.textContent = '连接成功！';
+                    statusEl.className = 'status success';
+                    accountAddressEl.textContent = account;
+                    accountInfoEl.style.display = 'block';
+                    
+                } catch (error) {
+                    console.error('连接失败:', error);
+                    statusEl.textContent = `连接失败: ${error.message}`;
+                    statusEl.className = 'status error';
+                }
+            });
+            
+            console.log('事件绑定完成！');
+        });
+    </script>
+</body>
+</html>
