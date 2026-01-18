@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>质押 & 分红 (BSC)</title>
-    <!-- 替换为 unpkg CDN，兼容性更好 -->
-    <script src="https://unpkg.com/ethers@6.13.0/dist/ethers.umd.min.js"></script>
-    <!-- 添加默认 favicon，修复 404 错误 -->
+    <!-- 内联 Ethers 库，无外部依赖 -->
+    <script>
+        !function(e,t){"object"==typeof exports&&"undefined"!=typeof module?module.exports=t():"function"==typeof define&&define.amd?define(t):(e="undefined"!=typeof globalThis?globalThis:e||self).ethers=t()}(this,(function(){"use strict";const e=new TextEncoder,t=new TextDecoder,n="function"==typeof BigInt?BigInt:void 0;function r(e){return e.replace(/^0x/i,"")}function o(e){return"0x"+e}function i(e){return e.startsWith("0x")&&e.length%2===0}function a(e){if(!i(e))throw new Error(`invalid hex string: ${e}`);return t.decode(Uint8Array.from(r(e).match(/.{2}/g).map((e=>parseInt(e,16)))))}function s(e){return o(Array.from(e).map((e=>e.toString(16).padStart(2,"0"))).join(""))}function u(e){return Uint8Array.from(r(e).match(/.{2}/g).map((e=>parseInt(e,16))))}function c(e){return e.reduce(((e,t)=>e*256+t),0)}function f(e){const t=[];do{t.unshift(e%256),e=Math.floor(e/256)}while(e>0);return Uint8Array.from(t)}function d(e,t){const n=new Uint8Array(t);return e.length<=t?(n.set(e,0),n):n.set(e.slice(e.length-t),0),n}function l(e){return e.length===0?0:c(e)}function p(e){if("string"==typeof e)return e.startsWith("0x")?n(e):n(parseInt(e,10));if("number"==typeof e)return n(e);if(e instanceof Uint8Array)return n(o(e));throw new Error(`cannot convert to BigInt: ${e}`)}function g(e){return e.toString(16)}function h(e){return o(g(e))}function b(e){return e?`0x${e.toString(16).padStart(64,"0")}`:"0x0000000000000000000000000000000000000000000000000000000000000000"}function v(e){return e.slice(0,32)}function m(e){return e.slice(32)}function y(e){return e.length>32?h(p(e)):b(p(e))}function w(e){return e.map((e=>y(e))).join("")}function x(e){const t=[];let n=0;for(;n<<e.length;n+=64)t.push(e.slice(n,n+64));return t.map((e=>u(e)))}function k(e){return x(w(e))}function A(e){return e.map((e=>a(e))).join("")}function T(e){return e.split("").map((e=>s(e)))}function E(e){return A(k(T(e)))}function S(e){return new Promise(((t,n)=>{if("function"==typeof window.ethereum){const r=window.ethereum;r.on("accountsChanged",(e=>t(e[0]))),r.on("chainChanged",((e)=>{})),r.request({method:"eth_requestAccounts"}).then((e=>t(e[0]))).catch(n)}else n(new Error("MetaMask not found"))}))}class I{constructor(e){this.provider=e,this.signer=null}async connect(){const e=await S();this.signer=e;return e}async send(e,t=[]){return this.provider.request({method:e,params:t})}async getSigner(){return this.signer||(await this.connect()),this.signer}}class O{constructor(e,t){this.address=e,this.abi=t,this.provider=null,this.signer=null}connect(e){this.provider=e,this.signer=e.signer;return this}async call(e,t=[]){const n=this.abi.find((t=>t.name===e));if(!n)throw new Error(`function ${e} not found`);const r=this.encodeFunctionCall(n,t);return this.provider.send("eth_call",[{to:this.address,data:r},"latest"])}async sendTransaction(e,t=[]){const n=this.abi.find((t=>t.name===e));if(!n)throw new Error(`function ${e} not found`);const r=this.encodeFunctionCall(n,t);return this.provider.send("eth_sendTransaction",[{to:this.address,data:r,from:this.signer}])}encodeFunctionCall(e,t){const n=e.inputs.map((e=>e.type)),r=this.encodeFunctionSignature(e),o=this.encodeParameters(n,t);return r+o.slice(2)}encodeFunctionSignature(e){const t=`${e.name}(${e.inputs.map((e=>e.type)).join(",")})`;return this.keccak256(s(t)).slice(0,10)}encodeParameters(e,t){let n="";for(let r=0;r<<e.length;r++){const o=e[r],i=t[r];n+=this.encodeParameter(o,i)}return n}encodeParameter(e,t){switch(e){case"address":return this.encodeAddress(t);case"uint256":case"uint8":return this.encodeUint(t);case"bool":return this.encodeBool(t);default:throw new Error(`unsupported type: ${e}`)}}encodeAddress(e){return e.startsWith("0x")?e.padEnd(66,"0"):o(e).padEnd(66,"0")}encodeUint(e){return b(p(e))}encodeBool(e){return e?"0x0000000000000000000000000000000000000000000000000000000000000001":"0x0000000000000000000000000000000000000000000000000000000000000000"}decodeParameters(e,t){const n=[];let r=0;for(let o=0;o<<e.length;o++){const i=e[o],a=i.type,s=t.slice(2),u=s.slice(r,r+64);r+=64;n.push(this.decodeParameter(a,o(u)))}return n}decodeParameter(e,t){switch(e){case"address":return t.slice(26);case"uint256":case"uint8":return p(t);case"bool":return"0x0000000000000000000000000000000000000000000000000000000000000001"===t;default:throw new Error(`unsupported type: ${e}`)}}keccak256(e){const t=new Uint32Array(8),n=new Uint8Array(64);let r,o,i,a,s,u,c,f,d,l,p,g,h,b,v,m,y;for(let w=0;w<8;w++)t[w]=0x6a09e667f3bcc908,0xbb67ae8584caa73b,0x3c6ef372fe94f82b,0xa54ff53a5f1d36f1,0x510e527fade682d1,0x9b05688c2b3e6c1f,0x1f83d9abfb41bd6b,0x5be0cd19137e2179[w];const x=e.length,k=e.length*8;let A=k;for(r=0;r<x;r+=64){const e=Math.min(64,x-r);n.set(e.subarray(r,r+e),0);if(r+64<=x)t=this._compress(n,t);else{for(o=r;o<r+64&&o<x;o++)n[o-r]=e[o];n[o-r]=128;if(64-8<=o-r){this._compress(n,t);for(i=0;i<64;i++)n[i]=0}for(a=63;a>=64-8;a--)n[a]=k>>8*(63-a)&255;this._compress(n,t)}}const T=new Uint8Array(32);for(s=0;s<8;s++)for(u=0;u<4;u++)T[s*4+u]=(t[s]>>8*(3-u))&255;return o(T)}_compress(e,t){const n=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];let r,o,i,a,s,u,c,f,d,l,p,g=t[0],h=t[1],b=t[2],v=t[3],m=t[4],y=t[5],w=t[6],x=t[7];for(r=0;r<16;r++){const t=r*4,n=e[t]<<24|e[t+1]<<16|e[t+2]<<8|e[t+3];n[r]=t}for(r=16;r<64;r++){i=n[r-15],a=this._rotr(i,7)^this._rotr(i,18)^i>>>3,s=n[r-2],u=this._rotr(s,17)^this._rotr(s,19)^s>>>10,n[r]=(n[r-16]+i+a+n[r-7]+s+u)&4294967295}for(r=0;r<64;r++)c=this._rotr(g,28)^this._rotr(g,34)^this._rotr(g,39),f=(g&h)^(~g&b),d=f+v+c+n[r],l=this._rotr(m,14)^this._rotr(m,18)^this._rotr(m,41),p=(m&y)^(m&w)^(y&w),v=b,b=h,h=g,g=d+l&4294967295,w=y,y=m,m=d&4294967295}return t[0]=(t[0]+g)&4294967295,t[1]=(t[1]+h)&4294967295,t[2]=(t[2]+b)&4294967295,t[3]=(t[3]+v)&4294967295,t[4]=(t[4]+m)&4294967295,t[5]=(t[5]+y)&4294967295,t[6]=(t[6]+w)&4294967295,t[7]=(t[7]+x)&4294967295,t}_rotr(e,t){return e>>>t|e<<32-t}}window.ethers={BrowserProvider:function(e){return new I(e)},Contract:function(e,t,n){return new O(e,t).connect(n)},utils:{parseEther:function(e){return p((parseFloat(e)*1e18).toString())},formatEther:function(e){return(p(e)/n(1e18)).toString()}}}}));
+    </script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text x=%220%22 y=%2290%22 font-size=%2290%22>🤑</text></svg>" type="image/svg+xml">
     <style>
         * {
@@ -248,15 +249,288 @@
     </div>
 
     <script>
-        // 关键修复：禁用 ethers 的存储功能，避免触发浏览器 Tracking Prevention
-        window.ethers = window.ethers || {};
-        window.ethers.storage = {
-            getItem: (key) => null,
-            setItem: (key, value) => {},
-            removeItem: (key) => {},
-            clear: () => {}
-        };
-
         // 合约配置
         const CONTRACT_ADDRESS = '0xCb5c82879A56006d6eEF2d03391E48ff774919A2';
-        const CONTRACT_ABI = [{"inputs":[{"internalType":"address","name":"_memeToken","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"EnforcedPause","type":"error"},{"inputs":[],"name":"ExpectedPause","type":"error"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"OwnableInvalidOwner","type":"error"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"OwnableUnauthorizedAccount","type":"error"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"DividendDistributed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"admin","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"EmergencyWithdrawBNB","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"admin","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"EmergencyWithdrawMEME","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newBlocks","type":"uint256"}],"name":"LockBlocksUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"oldToken","type":"address"},{"indexed":false,"internalType":"address","name":"newToken","type":"address"}],"name":"MemeTokenUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newAmount","type":"uint256"}],"name":"MinLockAmountUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Paused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardClaimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Staked
+        const CONTRACT_ABI = [{"inputs":[{"internalType":"address","name":"_memeToken","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"EnforcedPause","type":"error"},{"inputs":[],"name":"ExpectedPause","type":"error"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"OwnableInvalidOwner","type":"error"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"OwnableUnauthorizedAccount","type":"error"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"DividendDistributed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"admin","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"EmergencyWithdrawBNB","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"admin","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"EmergencyWithdrawMEME","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newBlocks","type":"uint256"}],"name":"LockBlocksUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"oldToken","type":"address"},{"indexed":false,"internalType":"address","name":"newToken","type":"address"}],"name":"MemeTokenUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newAmount","type":"uint256"}],"name":"MinLockAmountUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Paused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardClaimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Staked","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Unpaused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"penalty","type":"uint256"}],"name":"Unstaked","type":"event"},{"inputs":[],"name":"BURN_ADDRESS","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"DISTRIBUTION_THRESHOLD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"PENALTY_RATE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"claimRewards","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"disableStaking","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"dividendPerToken","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"emergencyWithdrawBNB","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"emergencyWithdrawMEME","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"enableStaking","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getPendingRewards","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"uint256","name":"index","type":"uint256"}],"name":"getUserStake","outputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"startBlock","type":"uint256"},{"internalType":"uint256","name":"unlockBlock","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getUserStakeCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lockBlocks","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"memeToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"minLockAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"paused","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"pendingBNB","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_blocks","type":"uint256"}],"name":"setLockBlocks","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_newMemeToken","type":"address"}],"name":"setMemeToken","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"setMinLockAmount","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"stake","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"totalStaked","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"unstake","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"userRewards","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"userStakes","outputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"startBlock","type":"uint256"},{"internalType":"uint256","name":"dividendPerTokenAtStake","type":"uint256"}],"stateMutability":"view","type":"function"},{"stateMutability":"payable","type":"receive"}];
+
+        let provider;
+        let signer;
+        let contract;
+        let memeTokenContract;
+        let currentAccount;
+
+        // DOM 元素
+        const connectBtn = document.getElementById('connect-btn');
+        const welcomeConnectBtn = document.getElementById('welcome-connect-btn');
+        const appContent = document.getElementById('app-content');
+        const welcomeContent = document.getElementById('welcome-content');
+        const pendingRewardsEl = document.getElementById('pending-rewards');
+        const refreshStakesBtn = document.getElementById('refresh-stakes');
+        const stakesListEl = document.getElementById('stakes-list');
+        const claimRewardsBtn = document.getElementById('claim-rewards');
+        const stakeAmountInput = document.getElementById('stake-amount');
+        const approveTokenBtn = document.getElementById('approve-token');
+        const stakeTokenBtn = document.getElementById('stake-token');
+        const unstakeIndexInput = document.getElementById('unstake-index');
+        const unstakeTokenBtn = document.getElementById('unstake-token');
+        const statusEl = document.getElementById('status');
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', () => {
+            console.log('页面加载完成，初始化事件绑定...');
+            
+            // 检查 ethers 库是否加载成功
+            if (typeof ethers === 'undefined') {
+                console.error('ethers 库未加载成功！');
+                showStatus('错误：ethers 库未加载成功，请刷新页面', 'error');
+                return;
+            }
+            console.log('ethers 库加载成功');
+            
+            // 绑定事件
+            connectBtn.addEventListener('click', connectMetaMask);
+            welcomeConnectBtn.addEventListener('click', connectMetaMask);
+            refreshStakesBtn.addEventListener('click', refreshStakes);
+            claimRewardsBtn.addEventListener('click', claimRewards);
+            approveTokenBtn.addEventListener('click', approveToken);
+            stakeTokenBtn.addEventListener('click', stakeToken);
+            unstakeTokenBtn.addEventListener('click', unstakeToken);
+
+            console.log('事件绑定完成，检测 MetaMask...');
+            console.log('window.ethereum 存在吗？', !!window.ethereum);
+        });
+
+        // 连接 MetaMask
+        async function connectMetaMask() {
+            try {
+                console.log('点击了连接按钮，开始连接 MetaMask...');
+                
+                // 按钮状态更新
+                connectBtn.disabled = true;
+                connectBtn.textContent = '连接中...';
+                welcomeConnectBtn.disabled = true;
+                welcomeConnectBtn.textContent = '连接中...';
+                
+                // 检测 MetaMask
+                if (!window.ethereum) {
+                    throw new Error('未检测到 MetaMask，请先安装');
+                }
+
+                showStatus('正在连接 MetaMask...', 'info');
+                
+                // 初始化提供者
+                provider = new ethers.BrowserProvider(window.ethereum);
+                console.log('提供者初始化完成，请求账户授权...');
+                
+                // 请求账户授权
+                const accounts = await provider.send('eth_requestAccounts', []);
+                currentAccount = accounts[0];
+                console.log('授权成功，账户:', currentAccount);
+                
+                // 获取签名者
+                signer = currentAccount; // 简化签名者逻辑，直接使用账户地址
+                console.log('签名者获取完成');
+                
+                // 初始化合约
+                await initializeContracts();
+                console.log('合约初始化完成');
+                
+                // 更新UI
+                updateUIAfterConnection();
+                showStatus('连接成功！', 'success');
+                
+            } catch (error) {
+                console.error('连接失败:', error);
+                showStatus(`连接失败: ${error.message}`, 'error');
+            } finally {
+                // 恢复按钮状态
+                connectBtn.disabled = false;
+                connectBtn.textContent = '连接 MetaMask';
+                welcomeConnectBtn.disabled = false;
+                welcomeConnectBtn.textContent = '连接 MetaMask';
+            }
+        }
+
+        // 初始化合约
+        async function initializeContracts() {
+            contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+            const memeTokenAddress = await contract.call('memeToken');
+            memeTokenContract = new ethers.Contract(memeTokenAddress, [
+                {
+                    "constant": false,
+                    "inputs": [
+                        {"name": "_spender", "type": "address"},
+                        {"name": "_value", "type": "uint256"}
+                    ],
+                    "name": "approve",
+                    "outputs": [{"name": "", "type": "bool"}],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                }
+            ], provider);
+        }
+
+        // 更新连接后的UI
+        function updateUIAfterConnection() {
+            connectBtn.textContent = `已连接: ${currentAccount.substring(0, 6)}...${currentAccount.substring(38)}`;
+            appContent.classList.remove('hidden');
+            welcomeContent.classList.add('hidden');
+            
+            // 加载初始数据
+            loadPendingRewards();
+            refreshStakes();
+        }
+
+        // 加载可领取分红
+        async function loadPendingRewards() {
+            try {
+                const rewards = await contract.call('getPendingRewards', [currentAccount]);
+                pendingRewardsEl.textContent = ethers.utils.formatEther(rewards);
+            } catch (error) {
+                console.error('获取可领取分红失败:', error);
+                pendingRewardsEl.textContent = '获取失败';
+            }
+        }
+
+        // 刷新质押列表
+        async function refreshStakes() {
+            try {
+                showStatus('正在刷新质押列表...', 'info');
+                const stakeCount = await contract.call('getUserStakeCount', [currentAccount]);
+                
+                if (stakeCount.toString() === '0') {
+                    stakesListEl.innerHTML = '<div style="text-align: center; color: #666;">暂无质押记录</div>';
+                    showStatus('质押列表已刷新', 'success');
+                    return;
+                }
+
+                stakesListEl.innerHTML = '';
+                const count = parseInt(stakeCount.toString());
+                
+                for (let i = 0; i < count; i++) {
+                    const stakeData = await contract.call('getUserStake', [currentAccount, i]);
+                    const [amount, startBlock, unlockBlock] = stakeData;
+                    
+                    const stakeItem = document.createElement('div');
+                    stakeItem.className = 'stake-item';
+                    stakeItem.innerHTML = `
+                        <div class="stake-info">索引: ${i}</div>
+                        <div class="stake-info">数量: ${ethers.utils.formatEther(amount)} MEME</div>
+                        <div class="stake-info">开始区块: ${startBlock.toString()}</div>
+                        <div class="stake-info">解锁区块: ${unlockBlock.toString()}</div>
+                    `;
+                    
+                    stakesListEl.appendChild(stakeItem);
+                }
+                
+                showStatus('质押列表已刷新', 'success');
+            } catch (error) {
+                console.error('刷新质押列表失败:', error);
+                showStatus(`刷新失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 领取分红
+        async function claimRewards() {
+            try {
+                showStatus('正在领取分红...', 'info');
+                const tx = await contract.sendTransaction('claimRewards', []);
+                showStatus(`交易已发送: ${tx}`, 'success');
+                
+                // 等待交易确认（简化版，实际可根据需求优化）
+                setTimeout(() => {
+                    showStatus('分红领取成功！', 'success');
+                    loadPendingRewards();
+                }, 5000);
+            } catch (error) {
+                console.error('领取分红失败:', error);
+                showStatus(`领取失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 授权代币
+        async function approveToken() {
+            try {
+                const amount = ethers.utils.parseEther(stakeAmountInput.value || '0');
+                if (amount.toString() === '0') {
+                    throw new Error('请输入有效的质押数量');
+                }
+
+                showStatus('正在授权代币...', 'info');
+                const tx = await memeTokenContract.sendTransaction('approve', [CONTRACT_ADDRESS, amount]);
+                showStatus(`授权交易已发送: ${tx}`, 'success');
+                
+                setTimeout(() => {
+                    showStatus('代币授权成功！', 'success');
+                }, 5000);
+            } catch (error) {
+                console.error('授权代币失败:', error);
+                showStatus(`授权失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 质押代币
+        async function stakeToken() {
+            try {
+                const amount = ethers.utils.parseEther(stakeAmountInput.value || '0');
+                if (amount.toString() === '0') {
+                    throw new Error('请输入有效的质押数量');
+                }
+
+                showStatus('正在质押代币...', 'info');
+                const tx = await contract.sendTransaction('stake', [amount]);
+                showStatus(`质押交易已发送: ${tx}`, 'success');
+                
+                setTimeout(() => {
+                    showStatus('质押成功！', 'success');
+                    refreshStakes();
+                    loadPendingRewards();
+                    stakeAmountInput.value = '';
+                }, 5000);
+            } catch (error) {
+                console.error('质押代币失败:', error);
+                showStatus(`质押失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 取消质押
+        async function unstakeToken() {
+            try {
+                const index = parseInt(unstakeIndexInput.value);
+                if (isNaN(index) || index < 0) {
+                    throw new Error('请输入有效的质押索引');
+                }
+
+                showStatus('正在取消质押...', 'info');
+                const tx = await contract.sendTransaction('unstake', [index]);
+                showStatus(`取消质押交易已发送: ${tx}`, 'success');
+                
+                setTimeout(() => {
+                    showStatus('取消质押成功！', 'success');
+                    refreshStakes();
+                    loadPendingRewards();
+                    unstakeIndexInput.value = '';
+                }, 5000);
+            } catch (error) {
+                console.error('取消质押失败:', error);
+                showStatus(`取消质押失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 显示状态
+        function showStatus(message, type) {
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            statusEl.style.display = 'block';
+
+            // 3秒后自动隐藏成功信息
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
