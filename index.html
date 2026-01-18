@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>极简版 - 连接测试</title>
-    <script src="https://cdn.ethers.org/lib-ethers/6.13.0/dist/ethers.umd.min.js"></script>
+    <!-- 使用更可靠的 CDN 链接 -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -71,6 +72,14 @@
         window.addEventListener('load', () => {
             console.log('页面加载完成！');
             
+            // 检查 ethers 库是否加载成功
+            if (typeof ethers === 'undefined') {
+                console.error('ethers 库未加载成功！');
+                showStatus('错误：ethers 库未加载成功，请检查网络或刷新页面', 'error');
+                return;
+            }
+            console.log('ethers 库加载成功:', ethers.version);
+            
             const connectBtn = document.getElementById('connect-btn');
             const statusEl = document.getElementById('status');
             const accountInfoEl = document.getElementById('account-info');
@@ -115,6 +124,14 @@
             
             console.log('事件绑定完成！');
         });
+        
+        // 显示状态函数
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            statusEl.style.display = 'block';
+        }
     </script>
 </body>
 </html>
