@@ -3,91 +3,240 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>锁代币质押页面（修复版）</title>
+    <title>锁仓分红CTO自治版</title>
     <style>
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         }
         body {
-            max-width: 800px;
+            max-width: 850px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f5f5f5;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
         }
         .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 20, 60, 0.5), 0 0 16px rgba(6, 182, 212, 0.15);
+            border: 1px solid rgba(6, 182, 212, 0.2);
         }
         h1 {
             text-align: center;
-            color: #333;
+            color: #06b6d4;
+            font-size: 28px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+            letter-spacing: 1px;
         }
         .section {
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 12px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(6, 182, 212, 0.1);
+            transition: all 0.3s ease;
+        }
+        .section:hover {
+            border-color: rgba(6, 182, 212, 0.3);
+            box-shadow: 0 4px 16px rgba(6, 182, 212, 0.1);
         }
         .section h2 {
             margin-top: 0;
-            color: #555;
-            font-size: 18px;
+            color: #38bdf8;
+            font-size: 20px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        input, button {
+        .section h2::before {
+            content: "⚙️";
+            font-size: 22px;
+        }
+        input {
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 14px;
+            margin: 8px 0;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 8px;
             font-size: 16px;
+            background: rgba(15, 23, 42, 0.7);
+            color: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        input:focus {
+            outline: none;
+            border-color: #06b6d4;
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+        }
+        input::placeholder {
+            color: #94a3b8;
         }
         button {
-            background-color: #4CAF50;
-            color: white;
+            width: 100%;
+            padding: 14px;
+            margin: 8px 0;
             border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        button:hover {
-            background-color: #45a049;
+        .btn-primary {
+            background: linear-gradient(135deg, #06b6d4 0%, #38bdf8 100%);
+            color: #0f172a;
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0891b2 0%, #2563eb 100%);
+            box-shadow: 0 6px 16px rgba(6, 182, 212, 0.4);
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+            transform: translateY(-2px);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+            transform: translateY(-2px);
         }
         button:disabled {
-            background-color: #cccccc;
+            background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+            color: #cbd5e1;
             cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
         }
         .status {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            display: none;
         }
         .success {
-            background-color: #dff2bf;
-            color: #4F8A10;
+            background: rgba(22, 163, 74, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(22, 163, 74, 0.3);
         }
         .error {
-            background-color: #ffbaba;
-            color: #D8000C;
+            background: rgba(220, 38, 38, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(220, 38, 38, 0.3);
         }
         .info {
-            background-color: #bde5f8;
-            color: #00529B;
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
         }
         .network-warning {
-            background-color: #fff3cd;
-            color: #856404;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 20px;
             display: none;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            font-size: 15px;
+            text-align: center;
+        }
+        .info-line {
+            margin-bottom: 12px;
+            color: #cbd5e1;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(6, 182, 212, 0.1);
+        }
+        .info-line:last-child {
+            border-bottom: none;
+        }
+        .info-line span:first-child {
+            color: #94a3b8;
+        }
+        .info-line span:last-child {
+            color: #38bdf8;
+            font-weight: 500;
+        }
+        .tip-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            font-size: 14px;
+            color: #bfdbfe;
+            line-height: 1.6;
+        }
+        .tip-box strong {
+            color: #38bdf8;
+        }
+        .tg-section {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border-radius: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+        .tg-section h2 {
+            color: #c084fc;
+            margin-bottom: 15px;
+            font-size: 19px;
+            display: inline-block; /* 确保标题也居中 */
+        }
+        .tg-btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+            color: white;
+            width: auto;
+            padding: 12px 30px;
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+            margin: 0 auto; /* 强制按钮居中 */
+        }
+        .tg-btn:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+            box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #94a3b8;
+            font-size: 14px;
+            padding: 15px 0;
+            border-top: 1px solid rgba(6, 182, 212, 0.1);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>锁代币质押页面（修复版）</h1>
+        <h1>锁仓分红CTO自治版</h1>
         
         <div id="networkWarning" class="network-warning">
             ⚠️ 警告：当前网络不是 BSC 主网（Chain ID: 56），请切换后重试！
@@ -95,43 +244,76 @@
         
         <div class="section">
             <h2>钱包连接</h2>
-            <button id="connectBtn">连接 MetaMask</button>
+            <button id="connectBtn" class="btn-primary">🔌 连接 MetaMask</button>
             <div id="walletAddress" class="info" style="display: none;"></div>
         </div>
         
         <div class="section">
             <h2>账户信息</h2>
-            <div id="tokenBalance" class="info" style="display: none;">锁代币余额: <span id="balanceValue">0</span></div>
-            <div id="stakedAmount" class="info" style="display: none;">已质押数量: <span id="stakedValue">0</span></div>
-            <div id="allowanceAmount" class="info" style="display: none;">授权额度: <span id="allowanceValue">0</span></div>
-            <div id="pendingRewards" class="info" style="display: none;">待领取分红: <span id="pendingRewardsValue">0</span> BNB</div>
+            <div id="tokenBalance" class="info-line" style="display: none;">
+                <span>锁代币余额:</span>
+                <span id="balanceValue">0</span>
+            </div>
+            <div id="stakedAmount" class="info-line" style="display: none;">
+                <span>已锁仓数量:</span>
+                <span id="stakedValue">0</span>
+            </div>
+            <div id="allowanceAmount" class="info-line" style="display: none;">
+                <span>授权额度:</span>
+                <span id="allowanceValue">0</span>
+            </div>
+            <div id="pendingRewards" class="info-line" style="display: none;">
+                <span>待领取分红:</span>
+                <span id="pendingRewardsValue">0</span> BNB
+            </div>
         </div>
         
         <div class="section">
             <h2>授权操作</h2>
             <input type="number" id="approveAmount" placeholder="输入要授权的锁代币数量" min="0" step="0.000000000000000001">
-            <button id="approveBtn" disabled>授权</button>
-            <div id="approveStatus" class="status" style="display: none;"></div>
+            <button id="approveBtn" class="btn-secondary" disabled>✅ 授权</button>
+            <div id="approveStatus" class="status"></div>
         </div>
         
         <div class="section">
-            <h2>质押操作</h2>
-            <input type="number" id="stakeAmount" placeholder="输入要质押的锁代币数量" min="0" step="0.000000000000000001">
-            <button id="stakeBtn" disabled>质押</button>
-            <div id="stakeStatus" class="status" style="display: none;"></div>
+            <h2>锁仓操作</h2>
+            <input type="number" id="stakeAmount" placeholder="输入要锁仓的锁代币数量" min="0" step="0.000000000000000001">
+            <button id="stakeBtn" class="btn-primary" disabled>🔒 锁仓</button>
+            <div id="stakeStatus" class="status"></div>
         </div>
         
         <div class="section">
-            <h2>取消质押操作</h2>
-            <input type="number" id="unstakeIndex" placeholder="输入要取消质押的索引（从0开始）" min="0" step="1">
-            <button id="unstakeBtn" disabled>取消质押</button>
-            <div id="unstakeStatus" class="status" style="display: none;"></div>
+            <h2>取消锁仓操作</h2>
+            <div class="tip-box">
+                <strong>操作提示：</strong><br>
+                假设你一共锁仓了3笔，那么你需要分三次解锁<br>
+                输入框输入内容为你锁仓的笔数索引<br>
+                第一次输入0 → 第二次输入1 → 第三次输入2<br>
+                以此类推
+            </div>
+            <input type="number" id="unstakeIndex" placeholder="输入要取消锁仓的索引（从0开始）" min="0" step="1">
+            <button id="unstakeBtn" class="btn-danger" disabled>🔓 取消锁仓</button>
+            <div id="unstakeStatus" class="status"></div>
         </div>
         
         <div class="section">
             <h2>领取分红</h2>
-            <button id="claimBtn" disabled>领取分红</button>
-            <div id="claimStatus" class="status" style="display: none;"></div>
+            <button id="claimBtn" class="btn-primary" disabled>💰 领取分红</button>
+            <div id="claimStatus" class="status"></div>
+        </div>
+        
+        <!-- TG群入口（已居中） -->
+        <div class="tg-section">
+            <h2>📢 加入官方TG社群</h2>
+            <a href="https://t.me/suocangfenhong" target="_blank" rel="noopener noreferrer">
+                <button class="tg-btn">👉 点击加入TG群</button>
+            </a>
+            <p style="margin-top: 10px; color: #94a3b8; font-size: 14px;">获取最新资讯、教程和社区支持</p>
+        </div>
+        
+        <!-- 年份已改为2026 -->
+        <div class="footer">
+            锁仓分红CTO自治版 © 2026 | 基于BSC主网开发
         </div>
     </div>
 
@@ -142,7 +324,7 @@
         const STAKE_CONTRACT_ADDRESS = "0xCb5c82879A56006d6eEF2d03391E48ff774919A2";
         const BSC_MAINNET_CHAIN_ID = 56; // BSC主网Chain ID
         
-        // 合约ABI（使用你提供的完整ABI）
+        // 合约ABI（使用完整ABI）
         const TOKEN_ABI = [
             "function balanceOf(address owner) view returns (uint256)",
             "function approve(address spender, uint256 amount) returns (bool)",
@@ -185,7 +367,7 @@
             window.ethereum.on('chainChanged', (chainId) => {
                 currentChainId = parseInt(chainId, 16);
                 checkNetwork();
-                if (address) updateAccountInfo(); // 网络切换后重新加载数据
+                if (address) updateAccountInfo();
             });
         }
         
@@ -218,7 +400,7 @@
                     address = await signer.getAddress();
                     
                     // 显示钱包地址
-                    walletAddress.textContent = `已连接: ${address}`;
+                    walletAddress.textContent = `已连接: ${address.substring(0,6)}...${address.substring(38)}`;
                     walletAddress.style.display = "block";
                     
                     // 初始化合约
@@ -236,7 +418,7 @@
                     
                     // 禁用连接按钮
                     connectBtn.disabled = true;
-                    connectBtn.textContent = "已连接";
+                    connectBtn.innerHTML = "✅ 已连接";
                 } catch (error) {
                     showStatus(approveStatus, "连接钱包失败: " + error.message, "error");
                 }
@@ -254,19 +436,19 @@
                 // 获取代币余额
                 const balance = await tokenContract.balanceOf(address);
                 balanceValue.textContent = ethers.utils.formatEther(balance);
-                tokenBalance.style.display = "block";
+                tokenBalance.style.display = "flex";
                 
                 // 获取授权额度
                 const allowance = await tokenContract.allowance(address, STAKE_CONTRACT_ADDRESS);
                 allowanceValue.textContent = ethers.utils.formatEther(allowance);
-                allowanceAmount.style.display = "block";
+                allowanceAmount.style.display = "flex";
                 
                 // 获取待领取分红
                 const rewards = await stakeContract.getPendingRewards(address);
                 pendingRewardsValue.textContent = ethers.utils.formatEther(rewards);
-                pendingRewards.style.display = "block";
+                pendingRewards.style.display = "flex";
                 
-                // 计算已质押总数
+                // 计算已锁仓总数
                 const stakeCount = await stakeContract.getUserStakeCount(address);
                 let totalStaked = ethers.BigNumber.from(0);
                 
@@ -276,7 +458,7 @@
                 }
                 
                 stakedValue.textContent = ethers.utils.formatEther(totalStaked);
-                stakedAmount.style.display = "block";
+                stakedAmount.style.display = "flex";
             } catch (error) {
                 showStatus(approveStatus, "获取账户信息失败: " + error.message, "error");
             }
@@ -298,7 +480,7 @@
                 
                 // 调用approve函数
                 const tx = await tokenContract.approve(STAKE_CONTRACT_ADDRESS, amountWei, {
-                    gasLimit: 100000 // 设置gas限制
+                    gasLimit: 100000
                 });
                 
                 // 等待交易确认
@@ -313,38 +495,38 @@
             }
         });
         
-        // 质押操作
+        // 锁仓操作
         stakeBtn.addEventListener("click", async () => {
             const amount = stakeAmount.value;
             if (!amount || amount <= 0) {
-                showStatus(stakeStatus, "请输入有效的质押数量", "error");
+                showStatus(stakeStatus, "请输入有效的锁仓数量", "error");
                 return;
             }
             
             try {
-                showStatus(stakeStatus, "正在质押...", "info");
+                showStatus(stakeStatus, "正在锁仓...", "info");
                 
                 // 转换为wei
                 const amountWei = ethers.utils.parseEther(amount);
                 
                 // 调用stake函数
                 const tx = await stakeContract.stake(amountWei, {
-                    gasLimit: 200000 // 设置gas限制
+                    gasLimit: 200000
                 });
                 
                 // 等待交易确认
                 await tx.wait();
                 
-                showStatus(stakeStatus, `质押成功! 交易哈希: ${tx.hash}`, "success");
+                showStatus(stakeStatus, `锁仓成功! 交易哈希: ${tx.hash}`, "success");
                 
                 // 更新账户信息
                 updateAccountInfo();
             } catch (error) {
-                showStatus(stakeStatus, "质押失败: " + error.message, "error");
+                showStatus(stakeStatus, "锁仓失败: " + error.message, "error");
             }
         });
         
-        // 取消质押操作
+        // 取消锁仓操作
         unstakeBtn.addEventListener("click", async () => {
             const index = unstakeIndex.value;
             if (!index || index < 0) {
@@ -353,22 +535,22 @@
             }
             
             try {
-                showStatus(unstakeStatus, "正在取消质押...", "info");
+                showStatus(unstakeStatus, "正在取消锁仓...", "info");
                 
                 // 调用unstake函数
                 const tx = await stakeContract.unstake(index, {
-                    gasLimit: 200000 // 设置gas限制
+                    gasLimit: 200000
                 });
                 
                 // 等待交易确认
                 await tx.wait();
                 
-                showStatus(unstakeStatus, `取消质押成功! 交易哈希: ${tx.hash}`, "success");
+                showStatus(unstakeStatus, `取消锁仓成功! 交易哈希: ${tx.hash}`, "success");
                 
                 // 更新账户信息
                 updateAccountInfo();
             } catch (error) {
-                showStatus(unstakeStatus, "取消质押失败: " + error.message, "error");
+                showStatus(unstakeStatus, "取消锁仓失败: " + error.message, "error");
             }
         });
         
@@ -379,7 +561,7 @@
                 
                 // 调用claimRewards函数
                 const tx = await stakeContract.claimRewards({
-                    gasLimit: 200000 // 设置gas限制
+                    gasLimit: 200000
                 });
                 
                 // 等待交易确认
@@ -400,11 +582,11 @@
             element.className = "status " + type;
             element.style.display = "block";
             
-            // 3秒后自动隐藏成功和信息状态
+            // 5秒后自动隐藏成功和信息状态
             if (type === "success" || type === "info") {
                 setTimeout(() => {
                     element.style.display = "none";
-                }, 5000); // 延长到5秒，方便用户复制交易哈希
+                }, 5000);
             }
         }
     </script>
